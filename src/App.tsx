@@ -58,7 +58,7 @@ function App() {
     setSelectedProduct(product);
     setSearch("");
     setShowResult(false);
-  };
+ setShowGameState(false); };
 
   const beltText = (amount: number) => {
     const beltsNeeded = Math.ceil(amount / beltCapacity);
@@ -107,8 +107,12 @@ function App() {
 
           <button
             style={buttonStyle}
-            onClick={() => setShowGameState(!showGameState)}
-          >
+onClick={() => {
+  setShowGameState(!showGameState);
+  setSelectedProduct("");
+  setSearch("");
+  setShowResult(false);
+}}          >
             👤 Mein Spielstand
           </button>
 
