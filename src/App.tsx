@@ -1,17 +1,6 @@
 import { useState } from "react";
 
-const products = [
-  "Eisenplatte",
-  "Eisenstange",
-  "Schraube",
-  "Verstärkte Eisenplatte",
-  "Modularer Rahmen",
-  "Schwerer Modularer Rahmen",
-  "Rotor",
-  "Motor",
-  "Computer",
-];
-
+import { products } from "./data/products";
 const beltCapacities: Record<string, number> = {
   "Mk.1": 60,
   "Mk.2": 120,
@@ -30,7 +19,7 @@ function App() {
   const [showResult, setShowResult] = useState(false);
 
   const filteredProducts = products.filter((product) =>
-    product.toLowerCase().includes(search.toLowerCase())
+    product.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const result = {
@@ -88,11 +77,11 @@ function App() {
             {filteredProducts.length > 0 ? (
               filteredProducts.map((product) => (
                 <button
-                  key={product}
+                  key={product.name}
                   style={resultButtonStyle}
-                  onClick={() => selectProduct(product)}
+                  onClick={() => selectProduct(product.name)}
                 >
-                  {product}
+                  {product.name}
                 </button>
               ))
             ) : (
@@ -367,11 +356,63 @@ onClick={() => {
                 )}
               </>
             ) : (
-              <p>
-                Die Berechnung für <strong>{selectedProduct}</strong> wird
-                später ergänzt.
-              </p>
-            )}
+  (() => {
+    const recipe = products.find(
+      (product) => product.name === selectedProduct
+    );
+
+    if (!recipe) {
+      return <p>Für dieses Produkt wurde kein Rezept gefunden.</p>;
+    }
+
+    const factor = targetAmount / recipe.outputPerMinute;
+    const machines = factor;
+
+    return (
+      <div>
+        <h3 style={resultTitleStyle}>📦 {recipe.name}</h3>
+<label style={labelStyle}>
+  Gewünschte Menge pro Minute
+  <input
+    type="number"
+    min="0.01"
+    step="0.01"
+value={targetAmount === 0 ? "" : targetAmount}    onChange={(event) => setTargetAmount(Number(event.target.value))}
+    style={searchStyle}
+  />
+</label>
+        <p>
+          Zielproduktion: <strong>{formatNumber(targetAmount)} / min</strong>
+        </p>
+
+        <p>
+          🏭 Benötigte Gebäude:{" "}
+          <strong>
+            {formatNumber(machines)} × {recipe.building}
+          </strong>
+        </p>
+
+        <h3>Benötigte Zutaten</h3>
+
+        {recipe.ingredients.length === 0 ? (
+          <p>Keine Eingangsmaterialien benötigt.</p>
+        ) : (
+          recipe.ingredients.map((ingredient) => {
+            const amount = ingredient.amountPerMinute * factor;
+
+            return (
+              <div key={ingredient.name}>
+                <strong>{ingredient.name}</strong>:{" "}
+                {formatNumber(amount)} / min
+                <div>{beltText(amount)}</div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  })()
+)}
           </section>
         )}
       </div>
