@@ -17,8 +17,8 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState("");
   const [targetAmount, setTargetAmount] = useState(20);
   const [showResult, setShowResult] = useState(false);
-
-  const filteredProducts = products.filter((product) =>
+  const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
+const [expandedSubIngredients, setExpandedSubIngredients] = useState<string[]>([]);  const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -179,19 +179,13 @@ onClick={() => {
                     min="0"
                     value={targetAmount}
                     onChange={(event) => {
-                      setTargetAmount(Number(event.target.value));
-                      setShowResult(false);
-                    }}
+  setTargetAmount(Number(event.target.value));
+  setShowResult(true);
+}}
                     style={numberInputStyle}
                   />
                 </label>
 
-                <button
-                  style={buttonStyle}
-                  onClick={() => setShowResult(true)}
-                >
-                  🧮 Berechnen
-                </button>
 
                 {showResult && (
                   <div style={calculationStyle}>
@@ -369,8 +363,8 @@ onClick={() => {
     const machines = factor;
 
     return (
-      <div>
-        <h3 style={resultTitleStyle}>📦 {recipe.name}</h3>
+<div style={calculationStyle}>        <h3 style={resultTitleStyle}>📦 {recipe.name}</h3>
+<hr style={{ border: "none", borderTop: "1px solid #555", margin: "12px 0 18px" }} />
 <label style={labelStyle}>
   Gewünschte Menge pro Minute
   <input
@@ -380,32 +374,152 @@ onClick={() => {
 value={targetAmount === 0 ? "" : targetAmount}    onChange={(event) => setTargetAmount(Number(event.target.value))}
     style={searchStyle}
   />
-</label>
-        <p>
-          Zielproduktion: <strong>{formatNumber(targetAmount)} / min</strong>
-        </p>
-
-        <p>
+</label><p style={itemCardStyle}>
           🏭 Benötigte Gebäude:{" "}
           <strong>
             {formatNumber(machines)} × {recipe.building}
           </strong>
         </p>
+       
 
-        <h3>Benötigte Zutaten</h3>
+<h3 style={subTitleStyle}>📊 Projektübersicht</h3>
+<div style={itemCardStyle}>
+  <div
+    style={{
+      display: "grid",
+gridTemplateColumns: "minmax(120px, 1.2fr) 80px 80px 60px",
+gap: "4px",      marginBottom: "8px",
+    }}
+  >
+    <span>Produkt</span>
+    <span>Benötigt</span>
+    <span>Vorhanden</span>
+<span>Fehlt</span>  </div>
 
+  {recipe.ingredients.map((ingredient) => {
+    const amount = ingredient.amountPerMinute * factor;
+
+    return (
+      <div
+        key={ingredient.name}
+        style={{
+          display: "grid",
+gridTemplateColumns: "minmax(120px, 1.2fr) 80px 80px 60px",
+gap: "4px",        }}
+      >
+        <span>{ingredient.name}</span>
+        <span>{formatNumber(amount)}</span>
+        <span>—</span>
+        <span>—</span>
+      </div>
+    );
+  })}
+</div>
+<h3 style={subTitleStyle}>📦 Benötigte Zutaten</h3>
         {recipe.ingredients.length === 0 ? (
           <p>Keine Eingangsmaterialien benötigt.</p>
         ) : (
           recipe.ingredients.map((ingredient) => {
             const amount = ingredient.amountPerMinute * factor;
-
+const ingredientRecipe = products.find((product) => product.name === ingredient.name);
             return (
-              <div key={ingredient.name}>
-                <strong>{ingredient.name}</strong>:{" "}
+<div key={ingredient.name} style={itemCardStyle}>                <strong>{ingredient.name}</strong>:{" "}
                 {formatNumber(amount)} / min
                 <div>{beltText(amount)}</div>
-              </div>
+              {ingredientRecipe && (
+  <button
+    style={linkButtonStyle}
+onClick={() =>
+  setExpandedIngredient(
+    expandedIngredient === ingredient.name ? null : ingredient.name
+  )
+}  >
+    {expandedIngredient === ingredient.name
+  ? "← Produktionskette zuklappen"
+  : "Produktionskette anzeigen →"} →
+  </button>
+)}{expandedIngredient === ingredient.name && ingredientRecipe && (
+  <div style={{ marginTop: "10px", paddingLeft: "12px" }}>
+    <strong>
+      🏭 {formatNumber(amount / ingredientRecipe.outputPerMinute)} × {ingredientRecipe.building}
+    </strong>
+
+    {ingredientRecipe.ingredients.map((subIngredient) => (
+      <div
+  key={subIngredient.name}
+  style={{
+    marginTop: "8px",
+    padding: "10px 12px",
+    border: "1px solid #555",
+    borderRadius: "8px",
+    backgroundColor: "#252a30",
+  }}
+>
+        ↳ {subIngredient.name}:{" "}
+        <strong>
+          {formatNumber(
+            subIngredient.amountPerMinute *
+              (amount / ingredientRecipe.outputPerMinute)
+          )}{" "}
+          / min
+        </strong>
+<button
+  style={linkButtonStyle}
+  onClick={() =>
+    setExpandedSubIngredients((current) =>
+      current.includes(subIngredient.name)
+        ? current.filter((name) => name !== subIngredient.name)
+        : [...current, subIngredient.name]
+    )
+  }
+>
+  {expandedSubIngredients.includes(subIngredient.name)
+    ? ""
+    : "weiter aufklappen →"}
+</button>
+ {expandedSubIngredients.includes(subIngredient.name) && (() => { const subRecipe = products.find(
+    (product) => product.name === subIngredient.name
+  );
+
+  if (!subRecipe) return null;
+
+  const subAmount =
+    subIngredient.amountPerMinute *
+    (amount / ingredientRecipe.outputPerMinute);
+
+  const subFactor = subAmount / subRecipe.outputPerMinute;
+
+  return (
+    <div style={{ marginTop: "8px", paddingLeft: "12px" }}>
+      <strong>
+        🏭 {formatNumber(subFactor)} × {subRecipe.building}
+      </strong>
+
+      {subRecipe.ingredients.map((deepIngredient) => (
+        <div key={deepIngredient.name} style={{ marginTop: "4px" }}>
+          ↳ {deepIngredient.name}:{" "}
+          <strong>
+            {formatNumber(
+              deepIngredient.amountPerMinute * subFactor
+            )}{" "}
+            / min
+          </strong>
+        </div>
+      ))}
+    <button
+  style={linkButtonStyle}
+onClick={() =>
+  setExpandedSubIngredients((current) =>
+    current.filter((name) => name !== subIngredient.name)
+  )
+}>
+  ← wieder zuklappen
+</button></div>
+  );
+})()}</div>
+    ))}
+  </div>
+)}</div>
             );
           })
         )}
