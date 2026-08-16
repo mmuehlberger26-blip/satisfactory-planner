@@ -79,7 +79,10 @@ button:hover {
     opacity: 0.85;
   }} /* Farben Projektübersicht – PC und Handy */
 /* Farben Projektübersicht */
-
+.project-header span:first-child {
+  color: #ff9800 !important;
+  font-weight: bold;
+}
 .project-header span:nth-child(2) {
   color: white !important;
 }

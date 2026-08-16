@@ -1,6 +1,7 @@
 import { useState } from "react";
 import "./App.css";
 import { products } from "./data/products";
+import MyFactories from "./MyFactories";
 const beltCapacities: Record<string, number> = {
   "Mk.1": 60,
   "Mk.2": 120,
@@ -12,6 +13,7 @@ const beltCapacities: Record<string, number> = {
 
 function App() {
   const [showGameState, setShowGameState] = useState(false);
+  const [showFactories, setShowFactories] = useState(false);
   const [beltMk, setBeltMk] = useState("Mk.1");
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -21,7 +23,7 @@ function App() {
 const [expandedSubIngredients, setExpandedSubIngredients] = useState<string[]>([]);  const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(search.toLowerCase())
   );
-
+const [availableProducts, setAvailableProducts] = useState<Record<string, number>>({});
   const result = {
     assemblers: targetAmount / 5,
     plateConstructors: targetAmount * 0.3,
@@ -47,7 +49,8 @@ const [expandedSubIngredients, setExpandedSubIngredients] = useState<string[]>([
     setSelectedProduct(product);
     setSearch("");
     setShowResult(false);
- setShowGameState(false); };
+ setShowGameState(false);
+ setShowFactories(false);};
 
   const beltText = (amount: number) => {
     const beltsNeeded = Math.ceil(amount / beltCapacity);
@@ -104,6 +107,18 @@ onClick={() => {
 }}          >
             👤 Mein Spielstand
           </button>
+<button
+  style={buttonStyle}
+  onClick={() => {
+    setShowFactories(!showFactories);
+    setShowGameState(false);
+    setSelectedProduct("");
+    setSearch("");
+    setShowResult(false);
+  }}
+>
+  🏭 Meine Fabriken
+</button>
 
           <button style={buttonStyle}>⚙️ Einstellungen</button>
         </div>
@@ -111,7 +126,6 @@ onClick={() => {
         {showGameState && (
           <section style={panelStyle}>
             <h2 style={sectionTitleStyle}>👤 Mein Spielstand</h2>
-
             <label style={labelStyle}>
               Höchstes Förderband
               <select
@@ -165,13 +179,19 @@ onClick={() => {
             </button>
           </section>
         )}
-
+{showFactories && (
+  <section style={panelStyle}>
+    <MyFactories
+      availableProducts={availableProducts}
+      setAvailableProducts={setAvailableProducts}
+    />
+  </section>
+)}
         {selectedProduct && (
           <section style={panelStyle}>
             <h2 style={sectionTitleStyle}>⚙️ {selectedProduct}</h2>
 
-            {selectedProduct === "Verstärkte Eisenplatte" ? (
-              <>
+{false ? (              <>
                 <label style={labelStyle}>
                   Gewünschte Menge pro Minute
                   <input
@@ -396,6 +416,8 @@ gap: "12px",    }}
 
   {recipe.ingredients.map((ingredient) => {
     const amount = ingredient.amountPerMinute * factor;
+    const available = availableProducts[ingredient.name] ?? 0;
+const missing = Math.max(0, amount - available);
 
     return (
       <div
@@ -412,11 +434,11 @@ gridTemplateColumns: "minmax(180px, 1.6fr) 100px 110px 80px",gap: "12px",       
 </span>
 <span className="project-owned">
   <span className="mobile-label">Vorhanden: </span>
-  —
+  {formatNumber(available)}
 </span>
 <span className="project-missing">
   <span className="mobile-label">Fehlt: </span>
-  —
+  {formatNumber(missing)}
 </span>      </div>
     );
   })}
@@ -469,6 +491,35 @@ onClick={() =>
           )}{" "}
           / min
         </strong>
+        <div
+  style={{
+    marginTop: "6px",
+    display: "flex",
+    gap: "14px",
+    flexWrap: "wrap",
+    fontSize: "16px",
+  }}
+>
+  <span>
+    Benötigt:{" "}
+    <strong style={{ color: "#66bb6a" }}>
+      {formatNumber(
+        subIngredient.amountPerMinute *
+          (amount / ingredientRecipe.outputPerMinute)
+      )}
+    </strong>
+  </span>
+
+  <span>
+    Vorhanden:{" "}
+    <strong style={{ color: "#42a5f5" }}>—</strong>
+  </span>
+
+  <span>
+    Fehlt:{" "}
+    <strong style={{ color: "#ef5350" }}>—</strong>
+  </span>
+</div>
 <button
   style={linkButtonStyle}
   onClick={() =>
@@ -502,16 +553,46 @@ onClick={() =>
       </strong>
 
       {subRecipe.ingredients.map((deepIngredient) => (
-        <div key={deepIngredient.name} style={{ marginTop: "4px" }}>
-          ↳ {deepIngredient.name}:{" "}
-          <strong>
-            {formatNumber(
-              deepIngredient.amountPerMinute * subFactor
-            )}{" "}
-            / min
-          </strong>
-        </div>
-      ))}
+<div key={deepIngredient.name} style={{ marginTop: "8px" }}>
+  <div>
+    ↳ {deepIngredient.name}:{" "}
+    <strong>
+      {formatNumber(
+        deepIngredient.amountPerMinute * subFactor
+      )}{" "}
+      / min
+    </strong>
+  </div>
+
+  <div
+    style={{
+      marginTop: "6px",
+      display: "flex",
+      gap: "14px",
+      flexWrap: "wrap",
+      fontSize: "16px",
+    }}
+  >
+    <span>
+      Benötigt:{" "}
+      <strong style={{ color: "#66bb6a" }}>
+        {formatNumber(
+          deepIngredient.amountPerMinute * subFactor
+        )}
+      </strong>
+    </span>
+
+    <span>
+      Vorhanden:{" "}
+      <strong style={{ color: "#42a5f5" }}>—</strong>
+    </span>
+
+    <span>
+      Fehlt:{" "}
+      <strong style={{ color: "#ef5350" }}>—</strong>
+    </span>
+  </div>
+</div>      ))}
     <button
   style={linkButtonStyle}
 onClick={() =>
