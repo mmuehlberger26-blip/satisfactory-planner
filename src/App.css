@@ -42,99 +42,54 @@ button:hover {
 }
 /* Handy-Anpassung Projektübersicht */
 @media (max-width: 600px) {
-.project-overview {
-  .project-overview > div {
-   .project-overview > div > span {
-    .project-header {
-  display: none !important;
-}
+  .project-overview {
+    padding: 10px !important;
+  }
 
-.project-row {
-  display: block !important;
-  padding: 10px 0;
-  border-bottom: 1px solid #44484f;
-}
+  .project-header {
+    display: none !important;
+  }
 
-.project-row span {
-  display: inline-block;
-  margin-right: 12px;
-}
+  .project-row {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 6px !important;
+    padding: 10px 0;
+    border-bottom: 1px solid #44484f;
+  }
 
-.project-row span:first-child {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-.mobile-label {
-  display: inline !important;
-  font-size: 12px;
-  opacity: 0.8;
-}
+  .project-name {
+    grid-column: 1 / -1;
+    display: block !important;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
 
-.project-row {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr 1fr !important;
-  gap: 6px !important;
-}
+  .project-needed,
+  .project-owned,
+  .project-missing {
+    min-width: 0;
+    white-space: nowrap;
+  }
 
-.project-name {
-  grid-column: 1 / -1;
-  display: block !important;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-.project-row span:nth-child(2) {
-  color: #ffb74d;
-  font-weight: bold;
-}
-
-.project-row span:nth-child(3) {
-  color: #66bb6a;
-  font-weight: bold;
-}
-
-.project-row span:nth-child(4) {
-  color: #ef5350;
-  font-weight: bold;
-}
-  min-width: 0;
-} /* Farben Projektübersicht – PC und Handy */
-.project-header span:nth-child(2),
-.project-row span:nth-child(2) {
-  color: #ffb74d;
-  font-weight: bold;
-}
-
-.project-header span:nth-child(3),
-.project-row span:nth-child(3) {
-  color: #66bb6a;
-  font-weight: bold;
-}
-
-.project-header span:nth-child(4),
-.project-row span:nth-child(4) {
-  color: #ef5350;
-  font-weight: bold;
-}
-  grid-template-columns: minmax(100px, 1fr) 60px 60px 45px !important;
-  gap: 4px !important;
-  font-size: 14px;
-}
-  padding: 10px !important;
-}
-}
+  .mobile-label {
+    display: inline !important;
+    color: white !important;
+    font-size: 11px;
+    opacity: 0.85;
+  }} /* Farben Projektübersicht – PC und Handy */
 /* Farben Projektübersicht */
 
 .project-header span:nth-child(2) {
-  color: #66bb6a !important;
+  color: white !important;
 }
 
 .project-header span:nth-child(3) {
-  color: #42a5f5 !important;
+  color: white !important;
 }
 
 .project-header span:nth-child(4) {
-  color: #ef5350 !important;
+  color: white !important;
 }
 
 /* Wörter auf Handy bleiben weiß */
@@ -153,4 +108,9 @@ button:hover {
 
 .project-missing {
   color: #ef5350 !important;
+}
+@media (min-width: 601px) {
+  .mobile-label {
+    display: none !important;
+  }
 }
