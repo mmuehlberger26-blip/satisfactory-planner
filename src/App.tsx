@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import "./App.css";
 import { products } from "./data/products";
 const beltCapacities: Record<string, number> = {
   "Mk.1": 60,
@@ -383,13 +383,11 @@ value={targetAmount === 0 ? "" : targetAmount}    onChange={(event) => setTarget
        
 
 <h3 style={subTitleStyle}>📊 Projektübersicht</h3>
-<div style={itemCardStyle}>
-  <div
+<div className="project-overview" style={itemCardStyle}>  <div className="project-header"
     style={{
       display: "grid",
-gridTemplateColumns: "minmax(120px, 1.2fr) 80px 80px 60px",
-gap: "4px",      marginBottom: "8px",
-    }}
+gridTemplateColumns: "minmax(180px, 1.6fr) 100px 110px 80px",
+gap: "12px",    }}
   >
     <span>Produkt</span>
     <span>Benötigt</span>
@@ -401,17 +399,25 @@ gap: "4px",      marginBottom: "8px",
 
     return (
       <div
+  className="project-row"
         key={ingredient.name}
         style={{
           display: "grid",
-gridTemplateColumns: "minmax(120px, 1.2fr) 80px 80px 60px",
-gap: "4px",        }}
+gridTemplateColumns: "minmax(180px, 1.6fr) 100px 110px 80px",gap: "12px",        }}
       >
-        <span>{ingredient.name}</span>
-        <span>{formatNumber(amount)}</span>
-        <span>—</span>
-        <span>—</span>
-      </div>
+<span className="project-name">{ingredient.name}</span>
+<span className="project-needed">
+  <span className="mobile-label">Benötigt: </span>
+  {formatNumber(amount)}
+</span>
+<span className="project-owned">
+  <span className="mobile-label">Vorhanden: </span>
+  —
+</span>
+<span className="project-missing">
+  <span className="mobile-label">Fehlt: </span>
+  —
+</span>      </div>
     );
   })}
 </div>
