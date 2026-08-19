@@ -1,5 +1,4 @@
-import { useState } from "react";
-import "./App.css";
+import { useEffect, useState } from "react";import "./App.css";
 import { products } from "./data/products";
 import MyFactories from "./MyFactories";
 const beltCapacities: Record<string, number> = {
@@ -14,17 +13,40 @@ const beltCapacities: Record<string, number> = {
 function App() {
   const [showGameState, setShowGameState] = useState(false);
   const [showFactories, setShowFactories] = useState(false);
-  const [beltMk, setBeltMk] = useState("Mk.1");
-  const [search, setSearch] = useState("");
+  const [showWelcome, setShowWelcome] = useState(
+  () => localStorage.getItem("welcomeSeen") !== "true"
+);
+const [beltMk, setBeltMk] = useState(() => {
+  return localStorage.getItem("beltMk") ?? "Mk.1";
+}); const [minerMk, setMinerMk] = useState(() => {
+  return localStorage.getItem("minerMk") ?? "Mk.1";
+});
+
+const [pipelineMk, setPipelineMk] = useState(() => {
+  return localStorage.getItem("pipelineMk") ?? "Mk.1";
+});
+
+const [blueprintMk, setBlueprintMk] = useState(() => {
+  return localStorage.getItem("blueprintMk") ?? "Noch nicht freigeschaltet";
+}); const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [targetAmount, setTargetAmount] = useState(20);
   const [showResult, setShowResult] = useState(false);
-  const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
-const [expandedSubIngredients, setExpandedSubIngredients] = useState<string[]>([]);  const filteredProducts = products.filter((product) =>
+  const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null); 
+const [expandedSubIngredients, setExpandedSubIngredients] = useState<string[]>([]); const rawMaterials = Array.from(
+  new Set(products.flatMap((product) => product.ingredients.map((ingredient) => ingredient.name)))
+).filter((name) => !products.some((product) => product.name === name)); const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(search.toLowerCase())
   );
-const [availableProducts, setAvailableProducts] = useState<Record<string, number>>({});
-  const result = {
+const filteredRawMaterials = rawMaterials.filter((name) =>
+  name.toLowerCase().includes(search.toLowerCase())
+);const [availableProducts, setAvailableProducts] = useState<Record<string, number>>(() => {
+  const saved = localStorage.getItem("availableProducts");
+  return saved ? JSON.parse(saved) : {};
+});
+  useEffect(() => {
+  localStorage.setItem("availableProducts", JSON.stringify(availableProducts));
+}, [availableProducts]);const result = {
     assemblers: targetAmount / 5,
     plateConstructors: targetAmount * 0.3,
     screwConstructors: targetAmount * 0.3,
@@ -66,7 +88,50 @@ const [availableProducts, setAvailableProducts] = useState<Record<string, number
     <main style={pageStyle}>
       <div style={contentStyle}>
         <h1 style={titleStyle}>🏭 Satisfactory Planner</h1>
+{showWelcome && (
+  <div
+    style={{
+      background: "#181a1d",
+      border: "1px solid #44484f",
+      borderRadius: "12px",
+      padding: "16px",
+      marginBottom: "18px",
+      lineHeight: "1.5",
+    }}
+  >
+    <h2
+      style={{
+        color: "#ff9800",
+        margin: "0 0 8px 0",
+        fontSize: "22px",
+      }}
+    >
+      👋 Willkommen beim Satisfactory Planner!
+    </h2>
 
+    <p style={{ margin: "0 0 10px 0" }}>
+      Plane deine Produktion und deine Fabriken einfach und übersichtlich.
+    </p>
+
+    <p style={{ margin: "0 0 14px 0" }}>
+      ⚙️ Unter <strong>Mein Spielstand</strong> kannst du einmalig deine
+      Förderbänder, Miner, Pipelines und deinen Blueprint Designer einstellen.
+      <br />
+      🏭 Unter <strong>Meine Fabriken</strong> kannst du deine bereits vorhandene
+      Produktion eintragen. Der Planner berücksichtigt sie bei deiner Planung.
+    </p>
+
+    <button
+      style={buttonStyle}
+      onClick={() => {
+        localStorage.setItem("welcomeSeen", "true");
+        setShowWelcome(false);
+      }}
+    >
+      ✅ Verstanden
+    </button>
+  </div>
+)}
         <input
           type="text"
           placeholder="🔍 Produkt suchen..."
@@ -90,7 +155,15 @@ const [availableProducts, setAvailableProducts] = useState<Record<string, number
             ) : (
               <p style={{ margin: 0 }}>Kein Produkt gefunden.</p>
             )}
-          </div>
+         {filteredRawMaterials.map((name) => (
+  <button
+    key={name}
+    style={resultButtonStyle}
+    onClick={() => selectProduct(name)}
+  >
+    ⛏️ {name}
+  </button>
+))} </div>
         )}
 
         <div style={navigationStyle}>
@@ -121,6 +194,12 @@ onClick={() => {
 </button>
 
           <button style={buttonStyle}>⚙️ Einstellungen</button>
+          <button
+  style={buttonStyle}
+  onClick={() => setShowWelcome(true)}
+>
+  ⓘ Hilfe
+</button>
         </div>
 
         {showGameState && (
@@ -142,27 +221,36 @@ onClick={() => {
               </select>
             </label>
 
-            <label style={labelStyle}>
-              Höchster Miner
-              <select style={selectStyle}>
-                <option>Mk.1</option>
-                <option>Mk.2</option>
-                <option>Mk.3</option>
-              </select>
-            </label>
-
+<label style={labelStyle}>
+  Höchster Miner
+  <select
+    style={selectStyle}
+    value={minerMk}
+    onChange={(event) => setMinerMk(event.target.value)}
+  >
+    <option>Mk.1</option>
+    <option>Mk.2</option>
+    <option>Mk.3</option>
+  </select>
+</label>
             <label style={labelStyle}>
               Höchste Pipeline
-              <select style={selectStyle}>
-                <option>Mk.1</option>
+<select
+  style={selectStyle}
+  value={pipelineMk}
+  onChange={(event) => setPipelineMk(event.target.value)}
+>                <option>Mk.1</option>
                 <option>Mk.2</option>
               </select>
             </label>
 
             <label style={labelStyle}>
               Blueprint Designer
-              <select style={selectStyle}>
-                <option>Noch nicht freigeschaltet</option>
+<select
+  style={selectStyle}
+  value={blueprintMk}
+  onChange={(event) => setBlueprintMk(event.target.value)}
+>                <option>Noch nicht freigeschaltet</option>
                 <option>Mk.1</option>
                 <option>Mk.2</option>
                 <option>Mk.3</option>
@@ -171,11 +259,18 @@ onClick={() => {
 
             <button
               style={buttonStyle}
-              onClick={() =>
-                alert(`✅ Spielstand gespeichert! Förderband: ${beltMk}`)
-              }
-            >
-              💾 Spielstand speichern
+onClick={() => {
+  localStorage.setItem("beltMk", beltMk);
+  localStorage.setItem("minerMk", minerMk);
+  localStorage.setItem("pipelineMk", pipelineMk);
+  localStorage.setItem("blueprintMk", blueprintMk);
+
+  alert(
+    `✅ Spielstand gespeichert!\nFörderband: ${beltMk}\nMiner: ${minerMk}\nPipeline: ${pipelineMk}\nBlueprint: ${blueprintMk}`
+  );
+}}
+>
+                💾 Spielstand speichern
             </button>
           </section>
         )}
@@ -375,10 +470,70 @@ onClick={() => {
       (product) => product.name === selectedProduct
     );
 
-    if (!recipe) {
-      return <p>Für dieses Produkt wurde kein Rezept gefunden.</p>;
-    }
+if (!recipe) {
+  const available = availableProducts[selectedProduct] ?? 0;
+  const missing = Math.max(0, targetAmount - available);
 
+  return (
+    <div style={calculationStyle}>
+      <h3 style={resultTitleStyle}>⛏️ {selectedProduct}</h3>
+
+      <hr
+        style={{
+          border: "none",
+          borderTop: "1px solid #555",
+          margin: "12px 0 18px",
+        }}
+      />
+
+      <label style={labelStyle}>
+        Gewünschte Menge pro Minute
+        <input
+          type="number"
+          min="0.01"
+          step="0.01"
+          value={targetAmount === 0 ? "" : targetAmount}
+          onChange={(event) => setTargetAmount(Number(event.target.value))}
+          style={searchStyle}
+        />
+      </label>
+
+      <div style={itemCardStyle}>
+        <strong>⛏️ Rohstoff – wird direkt abgebaut</strong>
+
+        <div
+          style={{
+            marginTop: "10px",
+            display: "flex",
+            gap: "14px",
+            flexWrap: "nowrap",
+          }}
+        >
+          <span>
+            Benötigt:{" "}
+            <strong style={{ color: "#66bb6a" }}>
+              {formatNumber(targetAmount)}
+            </strong>
+          </span>
+
+          <span>
+            Vorhanden:{" "}
+            <strong style={{ color: "#42a5f5" }}>
+              {formatNumber(available)}
+            </strong>
+          </span>
+
+          <span>
+            Fehlt:{" "}
+            <strong style={{ color: "#ef5350" }}>
+              {formatNumber(missing)}
+            </strong>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
     const factor = targetAmount / recipe.outputPerMinute;
     const machines = factor;
 
@@ -496,7 +651,7 @@ onClick={() =>
     marginTop: "6px",
     display: "flex",
     gap: "14px",
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
     fontSize: "16px",
   }}
 >
@@ -512,12 +667,19 @@ onClick={() =>
 
   <span>
     Vorhanden:{" "}
-    <strong style={{ color: "#42a5f5" }}>—</strong>
+    <strong style={{ color: "#42a5f5" }}>{formatNumber(availableProducts[subIngredient.name] ?? 0)}</strong>
   </span>
 
   <span>
     Fehlt:{" "}
-    <strong style={{ color: "#ef5350" }}>—</strong>
+    <strong style={{ color: "#ef5350" }}>{formatNumber(
+  Math.max(
+    0,
+    subIngredient.amountPerMinute *
+      (amount / ingredientRecipe.outputPerMinute) -
+      (availableProducts[subIngredient.name] ?? 0)
+  )
+)}</strong>
   </span>
 </div>
 <button
@@ -545,7 +707,6 @@ onClick={() =>
     (amount / ingredientRecipe.outputPerMinute);
 
   const subFactor = subAmount / subRecipe.outputPerMinute;
-
   return (
     <div style={{ marginTop: "8px", paddingLeft: "12px" }}>
       <strong>
@@ -569,7 +730,7 @@ onClick={() =>
       marginTop: "6px",
       display: "flex",
       gap: "14px",
-      flexWrap: "wrap",
+      flexWrap: "nowrap",
       fontSize: "16px",
     }}
   >
@@ -584,12 +745,18 @@ onClick={() =>
 
     <span>
       Vorhanden:{" "}
-      <strong style={{ color: "#42a5f5" }}>—</strong>
+      <strong style={{ color: "#42a5f5" }}>{formatNumber(availableProducts[deepIngredient.name] ?? 0)}</strong>
     </span>
 
     <span>
       Fehlt:{" "}
-      <strong style={{ color: "#ef5350" }}>—</strong>
+      <strong style={{ color: "#ef5350" }}>{formatNumber(
+  Math.max(
+    0,
+    deepIngredient.amountPerMinute * subFactor -
+      (availableProducts[deepIngredient.name] ?? 0)
+  )
+)}</strong>
     </span>
   </div>
 </div>      ))}

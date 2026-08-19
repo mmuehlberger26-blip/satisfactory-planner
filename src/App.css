@@ -42,10 +42,14 @@ button:hover {
 }
 /* Handy-Anpassung Projektübersicht */
 @media (max-width: 600px) {
+  .app {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
   .project-overview {
     padding: 10px !important;
   }
-
   .project-header {
     display: none !important;
   }

@@ -1,5 +1,5 @@
+import { useState } from "react";
 import { products } from "./data/products";
-
 type Props = {
   availableProducts: Record<string, number>;
   setAvailableProducts: React.Dispatch<
@@ -10,8 +10,18 @@ type Props = {
 export default function MyFactories({
   availableProducts,
   setAvailableProducts,
-}: Props) {
-  const updateAmount = (productName: string, amount: number) => {
+}: Props) {const [factorySearch, setFactorySearch] = useState("");
+  const allFactoryItems = Array.from(
+  new Set([
+    ...products.map((product) => product.name),
+    ...products.flatMap((product) =>
+      product.ingredients.map((ingredient) => ingredient.name)
+    ),
+  ])
+).map((name) => ({ name }));
+const filteredProducts = allFactoryItems.filter((product) =>
+  product.name.toLowerCase().includes(factorySearch.toLowerCase())
+);  const updateAmount = (productName: string, amount: number) => {
     setAvailableProducts((current) => ({
       ...current,
       [productName]: amount,
@@ -23,14 +33,26 @@ export default function MyFactories({
       <h2>🏭 Meine Fabriken</h2>
 
       <p>Hier kannst du eintragen, wie viel du von jedem Produkt bereits pro Minute produzierst.</p>
-
+<input
+  type="text"
+  placeholder="🔎 Produkt suchen..."
+  value={factorySearch}
+  onChange={(event) => setFactorySearch(event.target.value)}
+  style={{
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "10px",
+    marginBottom: "14px",
+    borderRadius: "8px",
+  }}
+/>
       <div
         style={{
           display: "grid",
           gap: "10px",
         }}
       >
-        {products.map((product) => (
+        {filteredProducts.map((product) => (
           <div
             key={product.name}
             style={{
