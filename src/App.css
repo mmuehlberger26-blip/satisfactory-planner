@@ -130,10 +130,12 @@ button:hover {
   .project-owned,
   .project-missing {
     font-weight: 700 !important;
+    font-size: 13px !important;
   }
 
   .mobile-label {
     font-weight: 700 !important;
+    font-size: 13px !important;
   }
 
   .main-navigation {

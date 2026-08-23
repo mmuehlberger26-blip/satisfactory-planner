@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";import "./App.css";
 import { products } from "./data/products";
 import MyFactories from "./MyFactories";
+import { createClient } from "@supabase/supabase-js";
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+);
 const beltCapacities: Record<string, number> = {
   "Mk.1": 60,
   "Mk.2": 120,
@@ -32,8 +37,16 @@ const [blueprintMk, setBlueprintMk] = useState(() => {
   const [selectedProduct, setSelectedProduct] = useState("");
   const [targetAmount, setTargetAmount] = useState(20);
   const [showResult, setShowResult] = useState(false);
+const [showFeedback, setShowFeedback] = useState(false);
+const [feedbackText, setFeedbackText] = useState("");
   const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null); 
-const [expandedSubIngredients, setExpandedSubIngredients] = useState<string[]>([]); const rawMaterials = Array.from(
+const [expandedSubIngredients, setExpandedSubIngredients] = useState<string[]>([]);const [previousCalculation, setPreviousCalculation] = useState<{
+  product: string;
+  amount: number;
+  expandedIngredient: string | null;
+  expandedSubIngredients: string[];
+  infoProduct: string | null;
+} | null>(null);const [infoProduct, setInfoProduct] = useState<string | null>(null); const rawMaterials = Array.from(
   new Set(products.flatMap((product) => product.ingredients.map((ingredient) => ingredient.name)))
 ).filter((name) => !products.some((product) => product.name === name)); const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(search.toLowerCase())
@@ -70,6 +83,7 @@ const filteredRawMaterials = rawMaterials.filter((name) =>
   const selectProduct = (product: string) => {
     setSelectedProduct(product);
     setSearch("");
+    setTargetAmount(0);
     setShowResult(false);
  setShowGameState(false);
  setShowFactories(false);};
@@ -115,8 +129,9 @@ const filteredRawMaterials = rawMaterials.filter((name) =>
     ⓘ Hilfe
   </button>
 </div>
-{showWelcome && (
-  <div
+
+
+{showWelcome && (  <div
     style={{
       background: "#181a1d",
       border: "1px solid #44484f",
@@ -175,11 +190,9 @@ const filteredRawMaterials = rawMaterials.filter((name) =>
     🗺️ Roadmap
   </h3>
 
-  <p style={{ margin: "0 0 6px 0" }}>
-    🔧 <strong>V1.0 – in Arbeit:</strong> Produktionsplanung, Spielstand,
-    vorhandene Fabriken, Förderband-Logik und Fehlmengenplanung.
-  </p>
-
+<p style={{ margin: "0 0 10px 0" }}>
+  ✅ <strong>Aktuelle Version: V1.0</strong>
+</p>
   <p style={{ margin: "0 0 6px 0" }}>
     🔜 <strong>V1.1:</strong> Kategorien, Favoriten und Einstellungen ausbauen.
   </p>
@@ -397,10 +410,10 @@ onClick={() => {
 </p>
 
 <p>
-  ✅ {beltText(result.ironOre)} von den Erzvorkommen zu den{" "}
-  <strong>{formatNumber(result.smelters)}</strong> Schmelzöfen.
-</p>
-</div>
+  ✅ <strong>{beltText(result.ironOre)}</strong>
+  {" "}von den Erzvorkommen zu den{" "}
+  <strong>{formatNumber(result.smelters)} Schmelzöfen</strong>.
+</p></div>
                     <h3 style={subTitleStyle}>🏭 Endprodukt</h3>
 
                     <div style={itemCardStyle}>
@@ -606,7 +619,28 @@ if (!recipe) {
 }
     const factor = targetAmount / recipe.outputPerMinute;
     const machines = factor;
+const getRecommendedBelt = (amount: number) => {
+  const beltOrder = ["Mk.1", "Mk.2", "Mk.3", "Mk.4", "Mk.5", "Mk.6"];
 
+  const currentIndex = beltOrder.indexOf(beltMk);
+
+  for (let i = 0; i <= currentIndex; i++) {
+    const mk = beltOrder[i];
+    const capacity = beltCapacities[mk];
+
+    if (amount <= capacity) {
+      return {
+        mk,
+        count: 1,
+      };
+    }
+  }
+
+  return {
+    mk: beltMk,
+    count: Math.ceil(amount / beltCapacity),
+  };
+};
     return (
 <div style={calculationStyle}>        <h3 style={resultTitleStyle}>📦 {recipe.name}</h3>
 <hr style={{ border: "none", borderTop: "1px solid #555", margin: "12px 0 18px" }} />
@@ -619,7 +653,28 @@ if (!recipe) {
 value={targetAmount === 0 ? "" : targetAmount}    onChange={(event) => setTargetAmount(Number(event.target.value))}
     style={searchStyle}
   />
-</label><p style={itemCardStyle}>
+</label>
+{previousCalculation && (
+  <button
+    style={linkButtonStyle}
+    onClick={() => {const prev = previousCalculation;
+if (!prev) return;
+      setSelectedProduct(previousCalculation.product);
+      setTargetAmount(previousCalculation.amount);
+      setExpandedIngredient(previousCalculation.expandedIngredient);
+      setExpandedSubIngredients([
+        ...previousCalculation.expandedSubIngredients,
+      ]);
+      setInfoProduct(previousCalculation.infoProduct);
+      setShowResult(true);
+      setPreviousCalculation(null);
+    }}
+  >
+    ← Zurück zur vorherigen Berechnung
+  </button>
+)}
+
+<p style={itemCardStyle}>
           🏭 Benötigte Gebäude:{" "}
           <strong>
             {formatNumber(machines)} × {recipe.building}
@@ -669,6 +724,10 @@ gridTemplateColumns: "minmax(180px, 1.6fr) 100px 110px 80px",gap: "12px",       
   })}
 </div>
 <h3 style={subTitleStyle}>📦 Benötigte Zutaten</h3>
+<div style={{ marginBottom: "12px" }}>
+  🚚 Aktuelles Förderband:{" "}
+  <strong>{beltMk} ({beltCapacity}/min)</strong>
+</div>
         {recipe.ingredients.length === 0 ? (
           <p>Keine Eingangsmaterialien benötigt.</p>
         ) : (
@@ -678,9 +737,22 @@ const ingredientRecipe = products.find((product) => product.name === ingredient.
             return (
 <div key={ingredient.name} style={itemCardStyle}>                <strong>{ingredient.name}</strong>:{" "}
                 {formatNumber(amount)} / min
-                <div>{beltText(amount)}</div>
-              {ingredientRecipe && (
-  <button
+{(() => {
+  const recommended = getRecommendedBelt(amount);
+
+  return (
+    <div style={{ marginTop: "6px" }}>
+      ✅ <strong>
+        {recommended.count} × Förderband {recommended.mk}
+      </strong>
+      {recommended.count === 1 ? " ausreichend: " : " benötigt: "}
+      {ingredientRecipe ? ingredientRecipe.building : "Rohstoffquelle"}
+      {" → "}
+      {recipe.building}
+    </div>
+  );
+})()} 
+ <button
     style={linkButtonStyle}
 onClick={() =>
   setExpandedIngredient(
@@ -691,7 +763,7 @@ onClick={() =>
   ? "← Produktionskette zuklappen"
   : "Produktionskette anzeigen →"} →
   </button>
-)}{expandedIngredient === ingredient.name && ingredientRecipe && (
+{expandedIngredient === ingredient.name && ingredientRecipe && (
   <div style={{ marginTop: "10px", paddingLeft: "12px" }}>
     <strong>
       🏭 {formatNumber(amount / ingredientRecipe.outputPerMinute)} × {ingredientRecipe.building}
@@ -751,6 +823,78 @@ onClick={() =>
   )
 )}</strong>
   </span>
+  <button
+  style={{
+    marginLeft: "8px",
+    padding: "2px 7px",
+    fontSize: "14px",
+  }}
+  onClick={() =>
+    setInfoProduct(
+      infoProduct === subIngredient.name ? null : subIngredient.name
+    )
+  }
+>
+  ℹ️
+</button>
+
+{infoProduct === subIngredient.name && (
+  <div
+    style={{
+      marginTop: "8px",
+      display: "flex",
+      gap: "8px",
+      flexWrap: "wrap",
+    }}
+  >
+    <button
+      style={linkButtonStyle}
+      onClick={() => {
+        const needed =
+          subIngredient.amountPerMinute *
+          (amount / ingredientRecipe.outputPerMinute);
+
+       setPreviousCalculation({
+  product: selectedProduct,
+  amount: targetAmount,
+  expandedIngredient,
+  expandedSubIngredients: [...expandedSubIngredients],
+  infoProduct,
+}); selectProduct(subIngredient.name);
+        setTargetAmount(needed);
+        setInfoProduct(null);
+      }}
+    >
+      🔄 Gesamte Produktion neu berechnen
+    </button>
+
+    <button
+      style={linkButtonStyle}
+      onClick={() => {
+        const needed =
+          subIngredient.amountPerMinute *
+          (amount / ingredientRecipe.outputPerMinute);
+
+        const missingAmount = Math.max(
+          0,
+          needed - (availableProducts[subIngredient.name] ?? 0)
+        );
+
+       setPreviousCalculation({
+  product: selectedProduct,
+  amount: targetAmount,
+  expandedIngredient,
+  expandedSubIngredients: [...expandedSubIngredients],
+  infoProduct,
+}); selectProduct(subIngredient.name);
+        setTargetAmount(missingAmount);
+        setInfoProduct(null);
+      }}
+    >
+      ➕ Nur fehlende Menge produzieren
+    </button>
+  </div>
+)}
 </div>
 <button
   style={linkButtonStyle}
@@ -854,6 +998,74 @@ onClick={() =>
           </section>
         )}
       </div>
+      {/* Feedback */}
+<div
+  style={{
+    marginTop: "30px",
+    paddingTop: "18px",
+    borderTop: "1px solid #44484f",
+    textAlign: "center",
+  }}
+>
+  <button
+    style={linkButtonStyle}
+    onClick={() => setShowFeedback((current) => !current)}
+  >
+    💬 Feedback geben
+  </button>
+
+  {showFeedback && (
+    <div
+      style={{
+        marginTop: "12px",
+        maxWidth: "500px",
+        marginLeft: "auto",
+        marginRight: "auto",
+      }}
+    >
+      <textarea
+        value={feedbackText}
+        onChange={(event) => setFeedbackText(event.target.value)}
+        placeholder="Was gefällt dir? Was können wir verbessern?"
+        rows={4}
+        style={{
+          width: "100%",
+          boxSizing: "border-box",
+          padding: "10px",
+          borderRadius: "8px",
+          border: "1px solid #44484f",
+          backgroundColor: "#181a1d",
+          color: "#ffffff",
+          resize: "vertical",
+        }}
+      />
+
+      <button
+        style={linkButtonStyle}
+onClick={async () => {
+  const message = feedbackText.trim();
+
+  if (!message) return;
+
+  const { error } = await supabase
+    .from("feedback")
+    .insert({ message });
+
+  if (error) {
+    alert("❌ Feedback konnte nicht gesendet werden.");
+    console.error(error);
+    return;
+  }
+
+  alert("✅ Danke für dein Feedback!");
+  setFeedbackText("");
+  setShowFeedback(false);
+}}      >
+        Feedback absenden
+      </button>
+    </div>
+  )}
+</div>
     </main>
   );
 }
