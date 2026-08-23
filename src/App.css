@@ -102,22 +102,59 @@ button:hover {
 /* Wörter auf Handy bleiben weiß */
 .mobile-label {
   color: white !important;
+  font-weight: 600;
 }
-
 /* Werte */
 .project-needed {
   color: #66bb6a !important;
+  font-weight: 700;
 }
 
 .project-owned {
   color: #42a5f5 !important;
+  font-weight: 700;
 }
 
 .project-missing {
   color: #ef5350 !important;
+  font-weight: 700;
 }
 @media (min-width: 601px) {
   .mobile-label {
     display: none !important;
+  }
+}
+@media (max-width: 600px) {
+
+  .project-needed,
+  .project-owned,
+  .project-missing {
+    font-weight: 700 !important;
+  }
+
+  .mobile-label {
+    font-weight: 700 !important;
+  }
+
+  .main-navigation {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+
+  .main-navigation button {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px 8px !important;
+    font-size: 15px !important;
+    white-space: nowrap;
+  }
+
+  .main-navigation button:last-child {
+    grid-column: 1 / -1;
+    width: auto !important;
+    justify-self: center;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
   }
 }

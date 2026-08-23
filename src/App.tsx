@@ -87,7 +87,34 @@ const filteredRawMaterials = rawMaterials.filter((name) =>
   return (
     <main style={pageStyle}>
       <div style={contentStyle}>
-        <h1 style={titleStyle}>🏭 Satisfactory Planner</h1>
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "10px",
+  }}
+>
+  <h1 style={titleStyle}>
+    🏭 Satisfactory Planner
+  </h1>
+
+  <button
+    onClick={() => setShowWelcome(true)}
+    style={{
+      background: "#ffffff",
+      color: "#111111",
+      border: "1px solid #cccccc",
+      borderRadius: "8px",
+      padding: "7px 11px",
+      fontWeight: "bold",
+      cursor: "pointer",
+      whiteSpace: "nowrap",
+    }}
+  >
+    ⓘ Hilfe
+  </button>
+</div>
 {showWelcome && (
   <div
     style={{
@@ -128,7 +155,55 @@ const filteredRawMaterials = rawMaterials.filter((name) =>
         setShowWelcome(false);
       }}
     >
-      ✅ Verstanden
+     <div
+  style={{
+  marginTop: "16px",
+  padding: "14px",
+  background: "#f5f5f5",
+  color: "#1a1a1a",
+  border: "1px solid #d0d0d0",
+  borderRadius: "10px",
+}}
+>
+  <h3
+    style={{
+      color: "#ffb74d",
+      margin: "0 0 10px 0",
+      fontSize: "18px",
+    }}
+  >
+    🗺️ Roadmap
+  </h3>
+
+  <p style={{ margin: "0 0 6px 0" }}>
+    🔧 <strong>V1.0 – in Arbeit:</strong> Produktionsplanung, Spielstand,
+    vorhandene Fabriken, Förderband-Logik und Fehlmengenplanung.
+  </p>
+
+  <p style={{ margin: "0 0 6px 0" }}>
+    🔜 <strong>V1.1:</strong> Kategorien, Favoriten und Einstellungen ausbauen.
+  </p>
+
+  <p style={{ margin: "0 0 6px 0" }}>
+    🔜 <strong>V1.2:</strong> Übertaktung, Power Shards und weitere
+    Produktionsoptionen.
+  </p>
+
+  <p style={{ margin: "0" }}>
+    🚀 <strong>Später:</strong> Profi-Funktionen, Blueprints,
+    erweiterte Optimierungen und weitere Komfortfunktionen.
+  </p>
+</div>
+
+<p
+  style={{
+    margin: "12px 0 8px 0",
+    fontSize: "13px",
+    opacity: 0.75,
+  }}
+>
+  Jederzeit über ⓘ Hilfe wieder aufrufbar.
+</p> ✅ Verstanden
     </button>
   </div>
 )}
@@ -166,8 +241,7 @@ const filteredRawMaterials = rawMaterials.filter((name) =>
 ))} </div>
         )}
 
-        <div style={navigationStyle}>
-          <button style={buttonStyle}>📂 Kategorien</button>
+<div className="main-navigation" style={navigationStyle}>          <button style={buttonStyle}>📂 Kategorien</button>
           <button style={buttonStyle}>⭐ Favoriten</button>
 
           <button
@@ -192,15 +266,11 @@ onClick={() => {
 >
   🏭 Meine Fabriken
 </button>
-
-          <button style={buttonStyle}>⚙️ Einstellungen</button>
-          <button
+       <button
   style={buttonStyle}
-  onClick={() => setShowWelcome(true)}
 >
-  ⓘ Hilfe
-</button>
-        </div>
+  ⚙️ Einstellungen
+</button> </div>
 
         {showGameState && (
           <section style={panelStyle}>
